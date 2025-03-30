@@ -1,7 +1,7 @@
 # magtag-iss-tracker
 An International Space Station tracker for the [Adafruit MagTag](https://www.adafruit.com/product/4800) written in CircuitPython 9. Tracks the location of the ISS in relation to the Earth, and provides information about each location.
 
-Inspired by and based on Simon Prickett's [Badger ISS Tracker](https://github.com/simonprickett/iss-tracker) project, including use of ideas, code, and assets.
+Inspired by and based on [Simon Prickett's Badger ISS Tracker](https://github.com/simonprickett/iss-tracker) project, including use of ideas, code, and assets.
 
 ## Features
 * Easily customizable by plugging MagTag into a computer and editing secrets and config files
@@ -60,3 +60,15 @@ Once in the map screen, press the left-most button to toggle between miles/kilom
 
 ## Toggle Night Light mode
 Once in the map screen, press any of the 3 right-most buttons to toggle night light mode on/off.
+
+# Limitations
+This project only works on WiFi networks with SSID and password. It is unlikely to work on public WiFi networks that use captive portals for signup or accepting terms and conditions.
+
+
+# Action shots
+You can find some images and videos from the following posts from my Bluesky account.
+
+* [Boot Slide show](https://bsky.app/profile/did:plc:vzyhuqgujb6qhl5mrpudqda2/post/3llmjf6fcfc2j)
+* [Proximity alert](https://bsky.app/profile/did:plc:vzyhuqgujb6qhl5mrpudqda2/post/3llmjx36rec2j)
+* [Miles/Kilometers toggle](https://bsky.app/profile/did:plc:vzyhuqgujb6qhl5mrpudqda2/post/3llmjz2h5n22j)
+* [Night light toggle](https://bsky.app/profile/did:plc:vzyhuqgujb6qhl5mrpudqda2/post/3llmkbouej22j)
