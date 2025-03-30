@@ -1,6 +1,8 @@
 # magtag-iss-tracker
 An International Space Station tracker for the [Adafruit MagTag](https://www.adafruit.com/product/4800) written in CircuitPython 9. Tracks the location of the ISS in relation to the Earth, and provides information about each location.
 
+![MagTag running ISS Tracker firmware](https://github.com/apendley/magtag-iss-tracker/blob/main/hero.jpeg)
+
 Inspired by and based on [Simon Prickett's Badger ISS Tracker](https://github.com/simonprickett/iss-tracker) project, including use of ideas, code, and assets.
 
 ## Features
