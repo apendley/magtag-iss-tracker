@@ -1,0 +1,3 @@
+worldmap-mono.bmp and iss_02.bmp are modified versions of images from Simon Prickett's Badger ISS tracker project at https://github.com/simonprickett/iss-tracker/
+
+The remaining images are modified versions of public domain images provided by NASA.
