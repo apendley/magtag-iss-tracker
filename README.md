@@ -29,14 +29,14 @@ Before we begin installation, you'll need a Geoapify API key. If you don't have 
 4. Your API key can be found here. You'll need this later after installing the firmware onto your MagTag.
 
 Now what we have our API key, let's install CircuitPython and the firmware:
-1. Install CircuitPython 9 on your MagTag. As of this writing, the current version is 9.2.6. You can find CircuitPython installation instruction for the MagTag here](https://learn.adafruit.com/adafruit-magtag/circuitpython).
+1. Install CircuitPython 9 on your MagTag. As of this writing, the current version is 9.2.6. You can find [CircuitPython installation instruction for the MagTag here](https://learn.adafruit.com/adafruit-magtag/circuitpython).
 2. Delete all files from your MagTag's CIRCUITPY drive.
 3. Download or clone this repo.
 4. Copy the contents of the CIRCUITPY from the downloaded/cloned repo to your MagTag's CIRCUITPY drive.
 5. Open the **settings.toml** file on your MagTag's CIRCUITPY drive in your favorite text editor.
 6. Replace SSID with your WiFi network's SSID
 7. Replace PASSWORD with your WiFi network's password
-8. Replace KEY with your Geoapify API key you created earlier.
+8. Replace KEY with the Geoapify API key you created earlier.
 9. Save and close file.
 
 That's it! If you're okay with the default configuration, you're good to go. If you'd like to cusomize the settings, such as the location refresh rate, home location, etc, open the config.py file on the MagTag's CIRCUITPY drive in your favorite text editor, and modify any settings you wish.
