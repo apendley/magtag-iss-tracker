@@ -28,6 +28,7 @@ Before we begin installation, you'll need a Geoapify API key. If you don't have 
 3. Click on the project you just created
 4. Your API key can be found here. You'll need this later after installing the firmware onto your MagTag.
 
+Now what we have our API key, let's install CircuitPython and the firmware:
 1. Install CircuitPython 9 on your MagTag. As of this writing, the current version is 9.2.6. You can find 9CircuitPython installation instruction for the MagTag here](https://learn.adafruit.com/adafruit-magtag/circuitpython).
 2. Delete all files from your MagTag's CIRCUITPY drive.
 3. Download or clone this repo.
