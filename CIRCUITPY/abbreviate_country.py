@@ -16,7 +16,6 @@ ABBREVIATED_COUNTRY_NAMES = {
     'Saint Lucia': 'St Lucia',
     'Bosnia and Herzegovina': 'Bosnia Herzegovina',
     'Antigua and Barbuda': 'Antigua & Barbuda',
-    'Republic of the Congo': 'Congo',
     "Republic of Korea": "South Korea",
     "Bolivarian Republic of Venezuela": "Venezuela",
     "People's Republic of China": "China",
