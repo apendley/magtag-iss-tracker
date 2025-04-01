@@ -237,10 +237,9 @@ def update_history_markers(dt):
             # history_markers_group.remove(marker.sprite)
             removed_markers.append(marker)
         else:
-            # Quadratic decay, which looks a bit nicer than linear.
-            ratio = (marker.time_to_live / HISTORY_MARKER_DURATION) ** 2
+            # Decay linearly with time
+            ratio = marker.time_to_live / HISTORY_MARKER_DURATION
             radius = ceil(ratio * layout.history_marker_radius)
-
 
             # If our radius has changed, replace the old sprite with a one with the new radius.
             if radius == 0:
@@ -288,23 +287,23 @@ display.root_group.append(distance_bg)
 
 # Distance label
 distance_label = Label(
-    font=fonts.NUMERIC_24, 
+    font=fonts.NUMERIC_32, 
     text="",
-    anchor_point = (0.5, 0.0),
+    anchor_point = (0.5, 0.5),
     color=0
 )
-distance_label.anchored_position = (layout.distance_label_x_center, 2)
+distance_label.anchored_position = (layout.distance_label_x_center, layout.distance_label_y_center)
 display.root_group.append(distance_label)
 
+def set_distance_text(dist):
+    distance_text = f"{dist}"
+    distance_label.font = layout.font_for_distance_text(distance_text)
+    distance_label.text = distance_text
+
 # Distance units label
-
-# return the appropriate units label for the currently displayed units
-def units_text(use_miles):
-    return "miles away" if use_miles else "km away"
-
 distance_units_label = Label(
-    font=fonts.REGULAR_8,
-    text=units_text(config.USE_MILES),
+    font=fonts.REGULAR_12,
+    text=layout.units_text(config.USE_MILES),
     anchor_point = (0.5, 0.0),
     color=0
 )
@@ -371,7 +370,7 @@ def update_map(lat, lon):
 
     # Update timestamp label not now
     now = time.localtime()
-    timestamp_label.text = f"{now.tm_mon:02}-{now.tm_mday:02} {now.tm_hour:02}:{now.tm_min:02}:{now.tm_sec:02} UTC"
+    timestamp_label.text = f"{now.tm_mon:02}/{now.tm_mday:02} {now.tm_hour:02}:{now.tm_min:02}:{now.tm_sec:02} UTC"
 
 ##################
 # Buttons
@@ -515,7 +514,7 @@ while True:
             close_by_distance = get_close_by_distance()
 
             # Update distance label
-            distance_label.text = f"{distance_to_home}"
+            set_distance_text(distance_to_home)
 
             # Flag whether we're close to home or not.
             is_close_to_home = distance_to_home <= close_by_distance
@@ -554,14 +553,13 @@ while True:
     if distance_units_toggled():
         is_displaying_miles = not is_displaying_miles
         distance_label.text = f"{get_distance_to_home()}"
-        distance_units_label.text = units_text(is_displaying_miles)        
+        distance_units_label.text = layout.units_text(is_displaying_miles)        
         display_needs_refresh = True
 
     # Update orientation if necessary
     accel = accelerometer.acceleration
     orientation_dirty = display.rotation != orientation.sync(display.rotation, accel.x, accel.y)
 
-    # Refresh display if necessary. Blocks until display update is complete.
     if display_needs_refresh or orientation_dirty:
         set_busy_led_color(config.DISPLAY_REFRESH_COLOR)
         refresh_display()
