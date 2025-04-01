@@ -3,6 +3,7 @@ import time
 import os
 import gc
 import random
+from math import ceil
 
 import rtc
 from adafruit_ticks import ticks_ms, ticks_diff
@@ -56,18 +57,20 @@ def sync_orientation():
     accel = accelerometer.acceleration
     display.rotation = orientation.sync(display.rotation, accel.x, accel.y)
 
-# Coordinate display refresh with orientation handling. Wait if necessary.
-def refresh_display_when_ready():
+# Coordinate display refresh with orientation handling.
+def refresh_display(wait=True):
     # Sleep until we can refresh the display
-    if display.time_to_refresh > 0:
+    if wait == True and display.time_to_refresh > 0:
         time.sleep(display.time_to_refresh)
 
     # Sync the display with the accelerometer
     accel = accelerometer.acceleration
     display.rotation = orientation.sync(display.rotation, accel.x, accel.y)
 
-    # Refresh the display
-    display.refresh()
+    try:
+        display.refresh()
+    except Exception as err:
+        print(err)
 
 ###############
 # Layout
@@ -154,7 +157,9 @@ def next_splash():
         # Show the new splash screen
         splash_group = show_splash()
         display.root_group = splash_group
-        refresh_display_when_ready()
+
+        # No need to wait, we already know we can refresh.
+        refresh_display(wait=False)
     else:
         print(f"next_splash(): Display is busy, time until refresh: {display.time_to_refresh}")
 
@@ -168,7 +173,7 @@ sync_orientation()
 # Display initial splash screen
 display.root_group = show_splash()
 next_splash_led()
-refresh_display_when_ready()
+refresh_display()
 
 ###################################
 # Connect to WiFi
@@ -201,6 +206,54 @@ world_map_group.append(map_sprite)
 display.root_group = displayio.Group()
 display.root_group.append(world_map_group)
 
+# History markers
+from history_marker import HistoryMarker
+
+# Convert to milliseconds
+HISTORY_MARKER_DURATION = config.HISTORY_MARKER_DURATION * 60 * 1000
+
+# History marker storage
+history_markers = []
+
+# History marker rendering
+history_markers_group = displayio.Group()
+display.root_group.append(history_markers_group)
+
+def add_history_marker(x, y):
+    new_shape = Circle(x, y, layout.history_marker_radius, fill=0, stroke=0)
+    history_markers.append(HistoryMarker(sprite=new_shape, time_to_live=HISTORY_MARKER_DURATION))
+    history_markers_group.append(new_shape)
+
+def update_history_markers(dt):
+    removed_markers = []
+
+    for marker_index in range(0, len(history_markers)):
+        marker = history_markers[marker_index]
+
+        marker.time_to_live -= dt
+
+        if marker.time_to_live <= 0:
+            # print(f"history marker is dead, removing")
+            # history_markers_group.remove(marker.sprite)
+            removed_markers.append(marker)
+        else:
+            # Decay linearly with time
+            ratio = marker.time_to_live / HISTORY_MARKER_DURATION
+            radius = ceil(ratio * layout.history_marker_radius)
+
+            # If our radius has changed, replace the old sprite with a one with the new radius.
+            if radius == 0:
+                removed_markers.append(marker)
+            elif marker.sprite.r != radius:
+                new_sprite = Circle(marker.sprite.x0, marker.sprite.y0, radius, fill=0, stroke=0)
+                marker.sprite = new_sprite
+                history_markers_group.pop(marker_index)
+                history_markers_group.insert(marker_index, new_sprite)
+
+    for marker in removed_markers:
+        history_markers_group.remove(marker.sprite)
+        history_markers.remove(marker)
+
 # Home icon
 home_x, home_y = layout.lat_lon_to_screen(config.HOME_LATITUDE, config.HOME_LONGITUDE)
 
@@ -216,21 +269,18 @@ home_icon = Triangle(
 )
 display.root_group.append(home_icon)
 
-# History markers group
-history_markers_group = displayio.Group()
-display.root_group.append(history_markers_group)
-
 # ISS Icon
 iss_marker = Circle(0, 0, layout.iss_icon_radius, fill=0xFFFFFF, outline=0, stroke=2)
 iss_marker.hidden = True
 display.root_group.append(iss_marker)
 
-# Left UI panel
-ui_panel_bg = Rect(0, 0, layout.map_x_offset, display.height, fill=0xFFFFFF)
-display.root_group.append(ui_panel_bg)
+# Info panel
+info_panel_bg = Rect(0, 0, layout.map_x_offset, display.height, fill=0xFFFFFF)
+display.root_group.append(info_panel_bg)
 
-ui_panel_separator = Rect(layout.map_x_offset - 1, 0, 2, display.height, fill=(128, 128, 128))
-display.root_group.append(ui_panel_separator)
+# Overlap the map slightly to give the location text a little more breathing room.
+info_panel_separator = Rect(layout.info_panel_content_width + 2, 0, 2, display.height, fill=0x808080)
+display.root_group.append(info_panel_separator)
 
 # Distance label background
 distance_bg = Rect(0, 0, layout.map_x_offset, layout.distance_bg_height, fill=0x808080) 
@@ -238,23 +288,23 @@ display.root_group.append(distance_bg)
 
 # Distance label
 distance_label = Label(
-    font=fonts.NUMERIC_24, 
+    font=fonts.NUMERIC_32, 
     text="",
-    anchor_point = (0.5, 0.0),
+    anchor_point = (0.5, 0.5),
     color=0
 )
-distance_label.anchored_position = (layout.distance_label_x_center, 2)
+distance_label.anchored_position = (layout.distance_label_x_center, layout.distance_label_y_center)
 display.root_group.append(distance_label)
 
+def set_distance_text(dist):
+    distance_text = f"{dist}"
+    distance_label.font = layout.font_for_distance_text(distance_text)
+    distance_label.text = distance_text
+
 # Distance units label
-
-# return the appropriate units label for the currently displayed units
-def units_text(use_miles):
-    return "miles away" if use_miles else "km away"
-
 distance_units_label = Label(
-    font=fonts.REGULAR_8,
-    text=units_text(config.USE_MILES),
+    font=fonts.REGULAR_12,
+    text=layout.units_text(config.USE_MILES),
     anchor_point = (0.5, 0.0),
     color=0
 )
@@ -287,22 +337,22 @@ def set_location_text(text):
     if text is None or text == "":
         return
 
-    format_result = layout.format_location(text)
+    layout_result = layout.layout_location_name(text)
     
-    if format_result is None:
+    if layout_result is None:
         # Should probably throw but oh well
         return
 
     y = 0
-    for line in format_result.lines:
+    for line in layout_result.lines:
         label = Label(
-            font=format_result.font,
+            font=layout_result.font,
             text=line,
             color=0
         )
 
         label.y = y
-        y += format_result.line_height
+        y += layout_result.line_height
 
         location_label_group.append(label)
 
@@ -316,19 +366,12 @@ def update_map(lat, lon):
     iss_marker.y0 = iss_y
     iss_marker.hidden = False
 
-    # Remove the oldest history marker if we're at the max.
-    if len(history_markers_group) >= config.MAX_LOCATION_HISTORY:
-        print("popping oldest history marker")
-        p = history_markers_group.pop(0)
-        # print(f"popped: {p.x0}, {p.y0}")
-
     # Add a new history marker at the current position
-    new_shape = Circle(iss_x, iss_y, layout.history_marker_radius, fill=0, stroke=0)
-    history_markers_group.append(new_shape)
+    add_history_marker(iss_x, iss_y)
 
     # Update timestamp label not now
     now = time.localtime()
-    timestamp_label.text = f"{now.tm_mon:02}-{now.tm_mday:02} {now.tm_hour:02}:{now.tm_min:02}:{now.tm_sec:02} UTC"
+    timestamp_label.text = f"{now.tm_mon:02}/{now.tm_mday:02} {now.tm_hour:02}:{now.tm_min:02}:{now.tm_sec:02} UTC"
 
 ##################
 # Buttons
@@ -403,7 +446,7 @@ def update_leds():
 # State tracking
 #############################
 # Update interval tracking
-last_updated = 0
+last_refresh_time = 0
 
 # Track whether currently displaying miles or km.
 # Initialize to whatever the user has decided for the default.
@@ -439,19 +482,20 @@ neopixel.fill(0x000000)
 
 # Final imports needed for main loop
 from haversine import haversine
-from printable import make_printable
 
 ####################
 # Main loop
 ####################
 while True:
-    # Handle rotation change
+    # If this is True by the end of the loop, the display will be refreshed.
     display_needs_refresh = False
 
-    # Refresh location, when it's time
-    if last_updated == 0 or ticks_diff(ticks_ms(), last_updated) >= config.REFRESH_INTERVAL * 1000:
+    # Refresh data when it's time. This is a blocking call, so we the status LED to indicate that we're busy.
+    last_refreshed_dt = ticks_diff(ticks_ms(), last_refresh_time)
+
+    if last_refresh_time == 0 or last_refreshed_dt >= config.REFRESH_INTERVAL * 1000:
         gc.collect()
-        print(f"\nFree memory: {gc.mem_free()}")
+        print(f"\n--- Free memory: {gc.mem_free()} ---")
 
         print("Fetching latest ISS coordinate")
         set_busy_led_color(config.FETCH_LOCATION_COLOR)
@@ -461,6 +505,11 @@ while True:
             print("Failed to fetch latest ISS coordinate, rescheduling for 1 second")
         else:
             lat, lon = coordinate[0], coordinate[1]
+            print(f"    ISS coordinate: {lat}, {lon}")
+
+            # Since the network requests are blocking, track the time it takes for them to complete,
+            # so we can apply that time to our history markers decay rate; otherwise, it won't be accounted for.
+            requests_start_time = ticks_ms()
 
             # Get distance to home using the Haversine formula.
             distance_in_miles = haversine(lat, lon, config.HOME_LATITUDE, config.HOME_LONGITUDE, use_miles=True)
@@ -470,7 +519,7 @@ while True:
             close_by_distance = get_close_by_distance()
 
             # Update distance label
-            distance_label.text = f"{distance_to_home}"
+            set_distance_text(distance_to_home)
 
             # Flag whether we're close to home or not.
             is_close_to_home = distance_to_home <= close_by_distance
@@ -478,21 +527,24 @@ while True:
             # Get updated location name
             print("Fetching geodata for coordinate")
             set_busy_led_color(config.FETCH_GEODATA_COLOR)
-            location_name = network.fetch_location_name(lat, lon)
 
-            # Make sure all of the characters we're trying to print are actually printable
-            if location_name is not None:
-                location_name = make_printable(location_name)
-
+            # Fetch geodata and get location name
+            geodata = network.fetch_geodata(lat, lon)            
+            location_name = layout.location_name_from_geodata(geodata)
             set_location_text(location_name)
 
             # Update map
             update_map(lat, lon)
 
+            # Make history markers size decay with time
+            decay_dt = last_refreshed_dt + ticks_diff(ticks_ms(), requests_start_time)
+            update_history_markers(last_refreshed_dt)
+
             # Need to refresh the display
             display_needs_refresh = True
 
-        last_updated = ticks_ms()
+        # Reset data refresh timer
+        last_refresh_time = ticks_ms()
 
     # Update buttons
     update_buttons()
@@ -505,17 +557,16 @@ while True:
     if distance_units_toggled():
         is_displaying_miles = not is_displaying_miles
         distance_label.text = f"{get_distance_to_home()}"
-        distance_units_label.text = units_text(is_displaying_miles)        
+        distance_units_label.text = layout.units_text(is_displaying_miles)        
         display_needs_refresh = True
 
     # Update orientation if necessary
     accel = accelerometer.acceleration
     orientation_dirty = display.rotation != orientation.sync(display.rotation, accel.x, accel.y)
 
-    # Refresh display if necessary
     if display_needs_refresh or orientation_dirty:
         set_busy_led_color(config.DISPLAY_REFRESH_COLOR)
-        refresh_display_when_ready()
+        refresh_display()
 
     # Update LEDs
     update_leds()

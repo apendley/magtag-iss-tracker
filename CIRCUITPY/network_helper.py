@@ -5,7 +5,17 @@ import wifi
 import socketpool
 import adafruit_requests
 import adafruit_ntp
-from abbreviate_country import abbreviate_country
+from collections import namedtuple
+
+GeoData = namedtuple("GeoData", [
+    "city",
+    "district",
+    "county",
+    "state",
+    "region",
+    "country",
+    "name"
+])
 
 class Network:
     def __init__(self):
@@ -74,90 +84,45 @@ class Network:
 
         return None
 
-    def fetch_location_name(self, lat, lon):
+    def fetch_geodata(self, lat, lon):
         api_key = os.getenv("GEOAPIFY_KEY")
         url = f"https://api.geoapify.com/v1/geocode/reverse?lat={lat}&lon={lon}&apiKey={api_key}&lang=en&limit=1"
 
         try:
             with self._requests.get(url) as response:
                 json = response.json()
-                _debug_print_geodata(json)
 
                 if len(json["features"]) > 0:
                     feature = json["features"][0]
                     properties = feature["properties"]
-                    return _location_name_from_properties(properties)
+                    _debug_print_geodata(properties)
+                    return _geodata_from_properties(properties)
 
         except Exception as err:
             print(f"Failed to fetch geoapify data, error: {err}")
 
 
 # Given a bag of properties, derive a location name.
-def _location_name_from_properties(properties):
-    # Aggregate location name components
-    name_components = []
+def _geodata_from_properties(properties):
+    formatted = properties["formatted"] if "formatted" in properties else None
+    name = properties["name"] if "name" in properties else None    
 
-    # Component 1: city, district, or county
-    if "city" in properties:
-        print("Found city component")
-        name_components.append(properties["city"])
-    elif "district" in properties: 
-        print("Found district component")
-        name_components.append(properties["district"])        
-    elif "county" in properties:
-        print("Found county component")
-        name_components.append(properties["county"])
+    return GeoData(
+        city=properties["city"] if "city" in properties else None,
+        district=properties["district"] if "district" in properties else None,
+        county=properties["county"] if "district" in properties else None,
+        state=properties["state"] if "state" in properties else None,
+        region=properties["region"] if "region" in properties else None,
+        country=properties["country"] if "country" in properties else None,
+        name=formatted if formatted is not None else name
+    )
 
-    # Component 2: state or region
-    if "state" in properties:
-        print("Found state component")
-        name_components.append(properties["state"])
-    elif "region" in properties: 
-        print("Found region component")
-        name_components.append(properties["region"])        
-
-    # Component 3: country
-    if "country" in properties:
-        print("Found country component")
-        country_name = abbreviate_country(properties["country"])
-        name_components.append(country_name)
-
-    # Build the name from components, or use a fallback
-    name = None
-
-    # Did we find any name components?
-    if len(name_components) > 0:
-        # Assemble the name from the components we found in the properties
-        name = ", ".join(name_components)
-        print(f"Using location name from components: {name}")
-    elif "formatted" in properties:
-        # First fallback. We didn't start with this because it can return
-        # street address level precision over land, which we don't really want.
-        name = properties["formatted"]
-        print(f"Using formatted location name: {name}") 
-    elif "name" in properties:
-        # Final fallback.
-        name = properties["name"]
-        print(f"Using default location name: {name}")
-
-    # Finally, return the processed name, or nothing.
-    return name
-
-def _debug_print_geodata(json):
-    # print(f"response headers:{response.headers}")
-    # print(f"reverse geocode response: {json}")
-
+# Print the properties we care about from returned geodata properties
+def _debug_print_geodata(properties):
     # Just print out the properties we care about, defined in this list.
     keys = ["city", "district", "county", "state", "region", "country", "formatted", "name"]
 
-    print("    geodata:")
-    if len(json["features"]) > 0:
-        feature = json["features"][0]
-        properties = feature["properties"]
-    else:
-        print("        no relevant geodata detected")
-        return
-
     for key in keys:
         if key in properties:
-            print(f"        {key}: {properties[key]}")    
+            print(f"    {key}: {properties[key]}")    
+

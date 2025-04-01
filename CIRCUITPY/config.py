@@ -1,9 +1,11 @@
 # How often in seconds to retrieve a new ISS position from the internet.
 REFRESH_INTERVAL = 60
 
-# How many previous ISS locations to display in the trail.
-# The longer your refresh interval is, the shorter you'll probably want this to be.
-MAX_LOCATION_HISTORY = 75
+# The lifetime of a history marker in minutes.
+# The ISS orbits once every ~90 minutes, so if you want the path to overlap
+# with its previous orbit(s), make HISTORY_MARKER_DURATION ~90 or higher.
+# Otherwise, use a value less than 90.
+HISTORY_MARKER_DURATION = 80
 
 # Home coordinate. Set this to wherever you are.
 HOME_LATITUDE = 39.742043
