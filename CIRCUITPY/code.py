@@ -274,12 +274,13 @@ iss_marker = Circle(0, 0, layout.iss_icon_radius, fill=0xFFFFFF, outline=0, stro
 iss_marker.hidden = True
 display.root_group.append(iss_marker)
 
-# Left UI panel
-ui_panel_bg = Rect(0, 0, layout.map_x_offset, display.height, fill=0xFFFFFF)
-display.root_group.append(ui_panel_bg)
+# Info panel
+info_panel_bg = Rect(0, 0, layout.map_x_offset, display.height, fill=0xFFFFFF)
+display.root_group.append(info_panel_bg)
 
-ui_panel_separator = Rect(layout.map_x_offset - 1, 0, 2, display.height, fill=(128, 128, 128))
-display.root_group.append(ui_panel_separator)
+# Overlap the map slightly to give the location text a little more breathing room.
+info_panel_separator = Rect(layout.info_panel_content_width + 2, 0, 2, display.height, fill=0x808080)
+display.root_group.append(info_panel_separator)
 
 # Distance label background
 distance_bg = Rect(0, 0, layout.map_x_offset, layout.distance_bg_height, fill=0x808080) 
@@ -494,7 +495,7 @@ while True:
 
     if last_refresh_time == 0 or last_refreshed_dt >= config.REFRESH_INTERVAL * 1000:
         gc.collect()
-        print(f"\nFree memory: {gc.mem_free()}")
+        print(f"\n--- Free memory: {gc.mem_free()} ---")
 
         print("Fetching latest ISS coordinate")
         set_busy_led_color(config.FETCH_LOCATION_COLOR)
@@ -503,11 +504,12 @@ while True:
         if coordinate is None:
             print("Failed to fetch latest ISS coordinate, rescheduling for 1 second")
         else:
+            lat, lon = coordinate[0], coordinate[1]
+            print(f"    ISS coordinate: {lat}, {lon}")
+
             # Since the network requests are blocking, track the time it takes for them to complete,
             # so we can apply that time to our history markers decay rate; otherwise, it won't be accounted for.
             requests_start_time = ticks_ms()
-
-            lat, lon = coordinate[0], coordinate[1]
 
             # Get distance to home using the Haversine formula.
             distance_in_miles = haversine(lat, lon, config.HOME_LATITUDE, config.HOME_LONGITUDE, use_miles=True)

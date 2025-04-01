@@ -20,7 +20,7 @@ class LayoutHelper:
         return self._display_height
     
     @property
-    def info_panel_width(self):
+    def info_panel_content_width(self):
         return self._display_width - self.map_width - self.text_left_margin
 
     @property
@@ -188,7 +188,7 @@ class LayoutHelper:
 
         lines = wrap_text_to_pixels(
             distance_text,
-            max_width=self.info_panel_width,
+            max_width=self.info_panel_content_width,
             font=fonts.NUMERIC_32
         )
 
@@ -197,7 +197,7 @@ class LayoutHelper:
     # Check to see if any of the individual words exceed the width,
     # and if so, move down a font size
     def _has_word_exceeding_max_width(self, text, font):
-        max_width = self.info_panel_width
+        max_width = self.info_panel_content_width
         words = text.split(" ")
 
         for word in words:
@@ -238,7 +238,7 @@ class LayoutHelper:
             max_lines = 6
             line_height = 14
 
-        max_width = self.info_panel_width
+        max_width = self.info_panel_content_width
 
         try:
             lines = wrap_text_to_pixels(

@@ -122,8 +122,7 @@ def _debug_print_geodata(properties):
     # Just print out the properties we care about, defined in this list.
     keys = ["city", "district", "county", "state", "region", "country", "formatted", "name"]
 
-    print("    geodata:")
     for key in keys:
         if key in properties:
-            print(f"        {key}: {properties[key]}")    
+            print(f"    {key}: {properties[key]}")    
 
