@@ -101,6 +101,8 @@ class Network:
         except Exception as err:
             print(f"Failed to fetch geoapify data, error: {err}")
 
+        return None
+
 
 # Given a bag of properties, derive a location name.
 def _geodata_from_properties(properties):
