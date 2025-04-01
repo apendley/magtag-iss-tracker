@@ -174,11 +174,11 @@ class LayoutHelper:
             result = self._format_shrink_to_fit(text, fonts.LOCATION_LARGE)
 
         if result is None:
-            print("Format location: shrink-to-fit level 2")
+            print("Layout location: shrink-to-fit level 2")
             result = self._format_shrink_to_fit(text, fonts.LOCATION_MEDIUM)
 
         if result is None:
-            print("Format location: shrink-to-fit level 3")
+            print("Layout location: shrink-to-fit level 3")
             result = self._format_shrink_to_fit(text, fonts.LOCATION_SMALL, truncate=True)
 
         return result
@@ -216,15 +216,15 @@ class LayoutHelper:
         if not self._has_word_exceeding_max_width(text, fonts.LOCATION_LARGE):
             return fonts.LOCATION_LARGE
 
-        print("Format location: shrink-to-longest-word level 2")
+        print("Layout location: shrink-to-longest-word level 2")
         if not self._has_word_exceeding_max_width(text, fonts.LOCATION_MEDIUM):
             return fonts.LOCATION_MEDIUM
 
-        print("Format location: shrink-to-longest-word level 3")
+        print("Layout location: shrink-to-longest-word level 3")
         if not self._has_word_exceeding_max_width(text, fonts.LOCATION_SMALL):
             return fonts.LOCATION_SMALL            
 
-        print("Format location: shrink-to-longest-word failed")
+        print("Layout location: shrink-to-longest-word failed")
         return None
 
     def _format_shrink_to_fit(self, text, font, truncate=False):
