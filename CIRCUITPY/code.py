@@ -336,22 +336,22 @@ def set_location_text(text):
     if text is None or text == "":
         return
 
-    format_result = layout.format_location(text)
+    layout_result = layout.layout_location_name(text)
     
-    if format_result is None:
+    if layout_result is None:
         # Should probably throw but oh well
         return
 
     y = 0
-    for line in format_result.lines:
+    for line in layout_result.lines:
         label = Label(
-            font=format_result.font,
+            font=layout_result.font,
             text=line,
             color=0
         )
 
         label.y = y
-        y += format_result.line_height
+        y += layout_result.line_height
 
         location_label_group.append(label)
 
@@ -481,7 +481,6 @@ neopixel.fill(0x000000)
 
 # Final imports needed for main loop
 from haversine import haversine
-from printable import make_printable
 
 ####################
 # Main loop
@@ -504,6 +503,10 @@ while True:
         if coordinate is None:
             print("Failed to fetch latest ISS coordinate, rescheduling for 1 second")
         else:
+            # Since the network requests are blocking, track the time it takes for them to complete,
+            # so we can apply that time to our history markers decay rate; otherwise, it won't be accounted for.
+            requests_start_time = ticks_ms()
+
             lat, lon = coordinate[0], coordinate[1]
 
             # Get distance to home using the Haversine formula.
@@ -522,18 +525,17 @@ while True:
             # Get updated location name
             print("Fetching geodata for coordinate")
             set_busy_led_color(config.FETCH_GEODATA_COLOR)
-            location_name = network.fetch_location_name(lat, lon)
 
-            # Make sure all of the characters we're trying to print are actually printable
-            if location_name is not None:
-                location_name = make_printable(location_name)
-
+            # Fetch geodata and get location name
+            geodata = network.fetch_geodata(lat, lon)            
+            location_name = layout.location_name_from_geodata(geodata)
             set_location_text(location_name)
 
             # Update map
             update_map(lat, lon)
 
             # Make history markers size decay with time
+            decay_dt = last_refreshed_dt + ticks_diff(ticks_ms(), requests_start_time)
             update_history_markers(last_refreshed_dt)
 
             # Need to refresh the display

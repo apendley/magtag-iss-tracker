@@ -1,6 +1,8 @@
 from adafruit_display_text import wrap_text_to_pixels
 import fonts
 from collections import namedtuple
+from printable import is_printable, make_printable
+from abbreviate_country import abbreviate_country
 
 FormatLocationResult = namedtuple("FormatLocationResult", ["lines", "font", "line_height"])
 
@@ -98,7 +100,63 @@ class LayoutHelper:
     def units_text(self, use_miles):
         return "miles away" if use_miles else "km away"
 
-    def format_location(self, text):
+    def location_name_from_geodata(self, geodata):
+        # Get locality component, if possible
+        locality = None
+        
+        # Try for an "ideal" name first (i.e. one that can be printed with no substitutions)
+        if is_printable(geodata.city, substitute_ascii=False):
+            locality = make_printable(geodata.city, substitute_ascii=False)
+        elif is_printable(geodata.district, substitute_ascii=False):
+            locality = make_printable(geodata.district, substitute_ascii=False)
+        elif is_printable(geodata.county, substitute_ascii=False):
+            locality = make_printable(geodata.county, substitute_ascii=False)
+
+        # If none were "ideal", see if any are printable with substitutions
+        if locality is None:
+            if is_printable(geodata.city, substitute_ascii=True):
+                locality = make_printable(geodata.city, substitute_ascii=True)
+            elif is_printable(geodata.district, substitute_ascii=True):
+                locality = make_printable(geodata.district, substitute_ascii=True)
+            elif is_printable(geodata.county, substitute_ascii=True):
+                locality = make_printable(geodata.county, substitute_ascii=True)
+
+        # Get region component
+        region = None
+
+        # Try for an "ideal" name first (i.e. one that can be printed with no substitutions)
+        if is_printable(geodata.state, substitute_ascii=False):
+            region = make_printable(geodata.state, substitute_ascii=False)
+        elif is_printable(geodata.region, substitute_ascii=False):
+            region = make_printable(geodata.region, substitute_ascii=False)
+
+        # If none were "ideal", see if any are printable with substitutions
+        if region is None:
+            if is_printable(geodata.state, substitute_ascii=True):
+                region = make_printable(geodata.state, substitute_ascii=True)
+            elif is_printable(geodata.region, substitute_ascii=True):
+                region = make_printable(geodata.region, substitute_ascii=True)
+
+        # Assemble name components
+        components = []
+
+        if locality is not None:
+            components.append(locality)
+
+        if region is not None:
+            components.append(region)   
+
+        if geodata.country is not None:
+            country_abbr = make_printable(abbreviate_country(geodata.country))
+            components.append(country_abbr)
+
+        # Assemble name from components, or fall back to pre-formatted name.
+        if len(components) > 0:
+            return ", ".join(components)
+        elif geodata.name is not None:
+            return make_printable(geodata.name)
+
+    def layout_location_name(self, text):
         result = None
 
         # First, see if any words in the string are too long to fit on one line.
