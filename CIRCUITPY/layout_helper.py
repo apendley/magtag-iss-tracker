@@ -47,11 +47,11 @@ class LayoutHelper:
 
     @property
     def iss_icon_radius(self):
-        return 4
+        return 5
 
     @property
     def history_marker_radius(self):
-        return 3
+        return 4
 
     @property
     def distance_bg_height(self):

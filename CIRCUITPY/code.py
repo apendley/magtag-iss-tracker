@@ -3,6 +3,7 @@ import time
 import os
 import gc
 import random
+from math import ceil
 
 import rtc
 from adafruit_ticks import ticks_ms, ticks_diff
@@ -56,18 +57,20 @@ def sync_orientation():
     accel = accelerometer.acceleration
     display.rotation = orientation.sync(display.rotation, accel.x, accel.y)
 
-# Coordinate display refresh with orientation handling. Wait if necessary.
-def refresh_display_when_ready():
+# Coordinate display refresh with orientation handling.
+def refresh_display(wait=True):
     # Sleep until we can refresh the display
-    if display.time_to_refresh > 0:
+    if wait == True and display.time_to_refresh > 0:
         time.sleep(display.time_to_refresh)
 
     # Sync the display with the accelerometer
     accel = accelerometer.acceleration
     display.rotation = orientation.sync(display.rotation, accel.x, accel.y)
 
-    # Refresh the display
-    display.refresh()
+    try:
+        display.refresh()
+    except Exception as err:
+        print(err)
 
 ###############
 # Layout
@@ -154,7 +157,9 @@ def next_splash():
         # Show the new splash screen
         splash_group = show_splash()
         display.root_group = splash_group
-        refresh_display_when_ready()
+
+        # No need to wait, we already know we can refresh.
+        refresh_display(wait=False)
     else:
         print(f"next_splash(): Display is busy, time until refresh: {display.time_to_refresh}")
 
@@ -168,7 +173,7 @@ sync_orientation()
 # Display initial splash screen
 display.root_group = show_splash()
 next_splash_led()
-refresh_display_when_ready()
+refresh_display()
 
 ###################################
 # Connect to WiFi
@@ -201,6 +206,55 @@ world_map_group.append(map_sprite)
 display.root_group = displayio.Group()
 display.root_group.append(world_map_group)
 
+# History markers
+from history_marker import HistoryMarker
+
+# Convert to milliseconds
+HISTORY_MARKER_DURATION = config.HISTORY_MARKER_DURATION * 60 * 1000
+
+# History marker storage
+history_markers = []
+
+# History marker rendering
+history_markers_group = displayio.Group()
+display.root_group.append(history_markers_group)
+
+def add_history_marker(x, y):
+    new_shape = Circle(x, y, layout.history_marker_radius, fill=0, stroke=0)
+    history_markers.append(HistoryMarker(sprite=new_shape, time_to_live=HISTORY_MARKER_DURATION))
+    history_markers_group.append(new_shape)
+
+def update_history_markers(dt):
+    removed_markers = []
+
+    for marker_index in range(0, len(history_markers)):
+        marker = history_markers[marker_index]
+
+        marker.time_to_live -= dt
+
+        if marker.time_to_live <= 0:
+            # print(f"history marker is dead, removing")
+            # history_markers_group.remove(marker.sprite)
+            removed_markers.append(marker)
+        else:
+            # Quadratic decay, which looks a bit nicer than linear.
+            ratio = (marker.time_to_live / HISTORY_MARKER_DURATION) ** 2
+            radius = ceil(ratio * layout.history_marker_radius)
+
+
+            # If our radius has changed, replace the old sprite with a one with the new radius.
+            if radius == 0:
+                removed_markers.append(marker)
+            elif marker.sprite.r != radius:
+                new_sprite = Circle(marker.sprite.x0, marker.sprite.y0, radius, fill=0, stroke=0)
+                marker.sprite = new_sprite
+                history_markers_group.pop(marker_index)
+                history_markers_group.insert(marker_index, new_sprite)
+
+    for marker in removed_markers:
+        history_markers_group.remove(marker.sprite)
+        history_markers.remove(marker)
+
 # Home icon
 home_x, home_y = layout.lat_lon_to_screen(config.HOME_LATITUDE, config.HOME_LONGITUDE)
 
@@ -215,10 +269,6 @@ home_icon = Triangle(
     outline=0x000000
 )
 display.root_group.append(home_icon)
-
-# History markers group
-history_markers_group = displayio.Group()
-display.root_group.append(history_markers_group)
 
 # ISS Icon
 iss_marker = Circle(0, 0, layout.iss_icon_radius, fill=0xFFFFFF, outline=0, stroke=2)
@@ -316,15 +366,8 @@ def update_map(lat, lon):
     iss_marker.y0 = iss_y
     iss_marker.hidden = False
 
-    # Remove the oldest history marker if we're at the max.
-    if len(history_markers_group) >= config.MAX_LOCATION_HISTORY:
-        print("popping oldest history marker")
-        p = history_markers_group.pop(0)
-        # print(f"popped: {p.x0}, {p.y0}")
-
     # Add a new history marker at the current position
-    new_shape = Circle(iss_x, iss_y, layout.history_marker_radius, fill=0, stroke=0)
-    history_markers_group.append(new_shape)
+    add_history_marker(iss_x, iss_y)
 
     # Update timestamp label not now
     now = time.localtime()
@@ -403,7 +446,7 @@ def update_leds():
 # State tracking
 #############################
 # Update interval tracking
-last_updated = 0
+last_refresh_time = 0
 
 # Track whether currently displaying miles or km.
 # Initialize to whatever the user has decided for the default.
@@ -445,11 +488,13 @@ from printable import make_printable
 # Main loop
 ####################
 while True:
-    # Handle rotation change
+    # If this is True by the end of the loop, the display will be refreshed.
     display_needs_refresh = False
 
-    # Refresh location, when it's time
-    if last_updated == 0 or ticks_diff(ticks_ms(), last_updated) >= config.REFRESH_INTERVAL * 1000:
+    # Refresh data when it's time. This is a blocking call, so we the status LED to indicate that we're busy.
+    last_refreshed_dt = ticks_diff(ticks_ms(), last_refresh_time)
+
+    if last_refresh_time == 0 or last_refreshed_dt >= config.REFRESH_INTERVAL * 1000:
         gc.collect()
         print(f"\nFree memory: {gc.mem_free()}")
 
@@ -489,10 +534,14 @@ while True:
             # Update map
             update_map(lat, lon)
 
+            # Make history markers size decay with time
+            update_history_markers(last_refreshed_dt)
+
             # Need to refresh the display
             display_needs_refresh = True
 
-        last_updated = ticks_ms()
+        # Reset data refresh timer
+        last_refresh_time = ticks_ms()
 
     # Update buttons
     update_buttons()
@@ -512,10 +561,10 @@ while True:
     accel = accelerometer.acceleration
     orientation_dirty = display.rotation != orientation.sync(display.rotation, accel.x, accel.y)
 
-    # Refresh display if necessary
+    # Refresh display if necessary. Blocks until display update is complete.
     if display_needs_refresh or orientation_dirty:
         set_busy_led_color(config.DISPLAY_REFRESH_COLOR)
-        refresh_display_when_ready()
+        refresh_display()
 
     # Update LEDs
     update_leds()
