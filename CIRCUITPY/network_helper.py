@@ -103,7 +103,6 @@ class Network:
 
         return None
 
-
 # Given a bag of properties, derive a location name.
 def _geodata_from_properties(properties):
     formatted = properties["formatted"] if "formatted" in properties else None
@@ -112,7 +111,7 @@ def _geodata_from_properties(properties):
     return GeoData(
         city=properties["city"] if "city" in properties else None,
         district=properties["district"] if "district" in properties else None,
-        county=properties["county"] if "district" in properties else None,
+        county=properties["county"] if "county" in properties else None,
         state=properties["state"] if "state" in properties else None,
         region=properties["region"] if "region" in properties else None,
         country=properties["country"] if "country" in properties else None,
