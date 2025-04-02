@@ -1,4 +1,4 @@
-from adafruit_display_text import wrap_text_to_pixels
+from wrap_text_to_pixels import wrap_text_to_pixels, split_for_wrapping
 import fonts
 from collections import namedtuple
 from printable import is_printable, make_printable
@@ -160,33 +160,31 @@ class LayoutHelper:
         result = None
 
         # First, see if any words in the string are too long to fit on one line.
-        # The main reason we do this is because wrap_text_to_pixels does not
-        # treat hyphens as natural line breaks (while preserving them before the break), 
-        # and also arbitrarily inserts its own hyphens in order to achieve assured word wrapping.
-        # Thus, we make an attempt before using it to shrink the font to hopefully fit
-        # the longest word in the name, avoiding the issue entirely. The downside is,
-        # for names that actually have hyphens in them, the entire hyphenated name counts
-        # as a "word", and will almost always result in _font_for_largest_word failing.
+        # I do this because I prefer a smaller font with a non-split word
+        # than a larger font with a word split arbitrarily.
         largest_word_font = self._font_for_largest_word(text)
 
-        # If largest_word_font is None, there were no words too long. 
-        # Otherwise, we'll use the returned font.
+        # If largest_word_font is None, we failed to find a font that can fit the largest
+        # word on a single line. Otherwise, the returned font is capable of rendering the
+        # largest word on a single line.
         if largest_word_font is not None:
             truncate = (largest_word_font == fonts.LOCATION_SMALL)
-            result = self._format_shrink_to_fit(text, largest_word_font, truncate=truncate)
+            result = self._format_text_for_font(text, largest_word_font, truncate=truncate)
 
-        # Now try to perform word wrapping on the text, shrinking to fit if we exceed our width,
+        # If result is still none, there is no way to fit the largest word on a single line,
+        # so we'll have to just let wrap_text_to_pixels break wherever it needs to.
+        # We'll try to perform word wrapping on the text, shrinking to fit if we exceed our alloted area,
         # and truncating the final string with an ellipsis if we cannot fit the text within the space.
         if result is None:
-            result = self._format_shrink_to_fit(text, fonts.LOCATION_LARGE)
+            result = self._format_text_for_font(text, fonts.LOCATION_LARGE)
+
+        if result is None:
+            print("Layout location: shrink-to-fit level 1")
+            result = self._format_text_for_font(text, fonts.LOCATION_MEDIUM)
 
         if result is None:
             print("Layout location: shrink-to-fit level 2")
-            result = self._format_shrink_to_fit(text, fonts.LOCATION_MEDIUM)
-
-        if result is None:
-            print("Layout location: shrink-to-fit level 3")
-            result = self._format_shrink_to_fit(text, fonts.LOCATION_SMALL, truncate=True)
+            result = self._format_text_for_font(text, fonts.LOCATION_SMALL, truncate=True)
 
         return result
 
@@ -205,7 +203,10 @@ class LayoutHelper:
     # and if so, move down a font size
     def _has_word_exceeding_max_width(self, text, font):
         max_width = self.info_panel_content_width
-        words = text.split(" ")
+
+        # Split string for wrapping
+        words = split_for_wrapping(text)
+        print("testing words for exceeding max width:", words)
 
         for word in words:
             lines = wrap_text_to_pixels(
@@ -223,18 +224,18 @@ class LayoutHelper:
         if not self._has_word_exceeding_max_width(text, fonts.LOCATION_LARGE):
             return fonts.LOCATION_LARGE
 
-        print("Layout location: shrink-to-longest-word level 2")
+        print("Layout location: shrink-to-longest-word level 1")
         if not self._has_word_exceeding_max_width(text, fonts.LOCATION_MEDIUM):
             return fonts.LOCATION_MEDIUM
 
-        print("Layout location: shrink-to-longest-word level 3")
+        print("Layout location: shrink-to-longest-word level 2")
         if not self._has_word_exceeding_max_width(text, fonts.LOCATION_SMALL):
             return fonts.LOCATION_SMALL            
 
         print("Layout location: shrink-to-longest-word failed")
         return None
 
-    def _format_shrink_to_fit(self, text, font, truncate=False):
+    def _format_text_for_font(self, text, font, truncate=False):
         if font == fonts.LOCATION_LARGE:
             max_lines = 4
             line_height = 21
