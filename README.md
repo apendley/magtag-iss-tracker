@@ -71,6 +71,7 @@ This project only works on WiFi networks with SSID and password. It is unlikely 
 # Action shots
 You can find some images and videos from the following posts from my Bluesky account.
 
+* [Time lapse](https://bsky.app/profile/apendley.bsky.social/post/3llsllxbx4k25)
 * [Boot Slide show](https://bsky.app/profile/did:plc:vzyhuqgujb6qhl5mrpudqda2/post/3llmjf6fcfc2j)
 * [Proximity alert](https://bsky.app/profile/did:plc:vzyhuqgujb6qhl5mrpudqda2/post/3llmjx36rec2j)
 * [Miles/Kilometers toggle](https://bsky.app/profile/did:plc:vzyhuqgujb6qhl5mrpudqda2/post/3llmjz2h5n22j)
