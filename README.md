@@ -6,7 +6,6 @@ An International Space Station tracker for the [Adafruit MagTag](https://www.ada
 Inspired by and based on [Simon Prickett's Badger ISS Tracker](https://github.com/simonprickett/iss-tracker) project, including use of ideas, code, and assets.
 
 ## Features
-* Easily customizable by plugging MagTag into a computer and editing secrets and config files
 * Uses free APIs provided by OpenNotify and Geoapify to provide location data (API key required for Geoapify data)
   * When possible, displays city/count/district, state/region, and country information for current location.
   * Displays names of bodies of water. Handy, since they make up most of the surface area of the planet!
@@ -15,6 +14,14 @@ Inspired by and based on [Simon Prickett's Badger ISS Tracker](https://github.co
 * Night Light mode: Toggle LEDs on/off to use the MagTag as a simple night light
 * Display auto-rotates based on accelerometer, easily allowing usage in standard and "upside down" orientations.
 * Blinkenlights!
+* Easily customizable by plugging MagTag into a computer and editing config files. Customize/configure:
+  * WiFi network settings
+  * Geoapify API Key
+  * Data refresh interval (every 60 seconds by default)
+  * Trail decay rate (80 minutes by default)
+  * "Home" GPS coordinate
+  * Close-to-home geofence alert distance
+  * LED brightness and status colors
 
 ### Notes
 * An API key is required from Geoapify in order to download location metadata. Accounts are free, and the API is free to use up to 3k requests a day, and 90k requests a month, which is more than plenty if with the default refresh duration.
