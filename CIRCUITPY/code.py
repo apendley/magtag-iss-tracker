@@ -502,7 +502,7 @@ while True:
         coordinate = network.fetch_iss_coordinate()
 
         if coordinate is None:
-            print("Failed to fetch latest ISS coordinate, rescheduling for 1 second")
+            print("Failed to fetch latest ISS coordinate")
         else:
             lat, lon = coordinate[0], coordinate[1]
             print(f"    ISS coordinate: {lat}, {lon}")
