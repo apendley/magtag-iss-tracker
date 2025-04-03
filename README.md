@@ -71,6 +71,9 @@ Once in the map screen, press the left-most button to toggle between miles/kilom
 ## Toggle Night Light mode
 Once in the map screen, press any of the 3 right-most buttons to toggle night light mode on/off.
 
+## Brightness adjust
+After the ISS Tracker has booted, the BOOT0 button can be used to adjust the brightness at runtime. The brightness values are specified in an list in config.py. Each button press will cycle to the next brightness value, resetting to the first at the end of the list.
+
 # Limitations
 This project only works on WiFi networks with SSID and password. It is unlikely to work on public WiFi networks that use captive portals for signup or accepting terms and conditions.
 
