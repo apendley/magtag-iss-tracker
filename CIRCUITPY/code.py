@@ -406,9 +406,9 @@ is_close_to_home = False
 # The right-most 3 buttons toggle the night light
 def night_light_toggled():
     if display.rotation == display_orientation.LANDSCAPE_TOP:
-        button_indices = range(1, 3)
+        button_indices = range(1, 4)
     else:
-        button_indices = range(0, 2)
+        button_indices = range(0, 3)
 
     for index in button_indices:
         if buttons[index].fell:
