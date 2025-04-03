@@ -24,7 +24,10 @@ import config
 ###############
 from neopixel import NeoPixel
 neopixel = NeoPixel(board.NEOPIXEL, 4)
-neopixel.brightness = config.LED_BRIGHTNESS
+
+led_brightness_index = 0
+neopixel.brightness = config.LED_BRIGHTNESS_LEVELS[led_brightness_index]
+
 neopixel.fill(0)
 
 ###############
@@ -379,7 +382,8 @@ def update_map(lat, lon):
 import digitalio
 from adafruit_debouncer import Debouncer
 
-button_pins = [board.BUTTON_A, board.BUTTON_B, board.BUTTON_C, board.BUTTON_D]
+# BOOT0 is used as a brightness cycle
+button_pins = [board.BUTTON_A, board.BUTTON_B, board.BUTTON_C, board.BUTTON_D, board.BOOT0]
 buttons = []
 
 for b in range(0, len(button_pins)):
@@ -387,14 +391,6 @@ for b in range(0, len(button_pins)):
     pin.direction = digitalio.Direction.INPUT
     pin.pull = digitalio.Pull.UP
     buttons.append(Debouncer(pin))
-
-def rotated_button_index(index):
-    max = len(buttons) - 1
-
-    if index > max:
-        return 0
-
-    return index if display.rotation == display_orientation.LANDSCAPE_TOP else max - index
 
 def update_buttons():
     for button in buttons:
@@ -405,33 +401,47 @@ def update_buttons():
 ##################
 night_light_on = False
 is_close_to_home = False
-resting_color = 0x000000
 
+# True if a night light toggle button was just pressed.
+# The right-most 3 buttons toggle the night light
 def night_light_toggled():
-    # The right-most 3 buttons toggle the night light
-    for index in range(1, 4):
-        if buttons[rotated_button_index(index)].fell:
+    if display.rotation == display_orientation.LANDSCAPE_TOP:
+        button_indices = range(1, 3)
+    else:
+        button_indices = range(0, 2)
+
+    for index in button_indices:
+        if buttons[index].fell:
             return True
 
     return False
 
+# True if distance unit toggle button was pressed.
+# The left-most button toggles the units between miles/km
 def distance_units_toggled():
-    # The left-most button toggles the units between miles/km
-    return buttons[rotated_button_index(0)].fell
+    if display.rotation == display_orientation.LANDSCAPE_TOP:
+        button_index = 0
+    else:
+        button_index = 3
+
+    if buttons[button_index].fell:
+        return True
+
+    return False
+
+# True if the brightness button was just pressed.
+def brightness_cycled():
+    return buttons[4].fell
 
 # Busy LED is the left-most LED, depending on orientation.
 def set_busy_led_color(color):
-    global resting_color
-
     if display.rotation == display_orientation.LANDSCAPE_TOP:
         neopixel[3] = color
-        neopixel[0] = resting_color
     else:
         neopixel[0] = color
-        neopixel[3] = resting_color
 
 def update_leds():
-    global night_light_on, is_close_to_home, resting_color
+    global night_light_on, is_close_to_home
 
     if is_close_to_home:
         resting_color = config.CLOSE_BY_COLOR
@@ -548,6 +558,15 @@ while True:
 
     # Update buttons
     update_buttons()
+
+    # Update brightness
+    if brightness_cycled():
+        led_brightness_index += 1
+
+        if led_brightness_index >= len(config.LED_BRIGHTNESS_LEVELS):
+            led_brightness_index = 0
+
+        neopixel.brightness = config.LED_BRIGHTNESS_LEVELS[led_brightness_index]
 
     # Update night light toggle
     if night_light_toggled():
