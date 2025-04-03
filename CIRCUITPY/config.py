@@ -19,16 +19,16 @@ USE_MILES = True
 CLOSE_BY_DISTANCE = 1000
 
 # What color should the boot/loading LEDs be?
-LOADING_COLOR = 0x404000
+LOADING_COLOR = 0xFFFF00
 
 # What color should the busy LED be when fetching the ISS location?
-FETCH_LOCATION_COLOR = 0x000040
+FETCH_LOCATION_COLOR = 0x0000FF
 
 # What color should the busy LED be when fetching geodata?
-FETCH_GEODATA_COLOR = 0x400040
+FETCH_GEODATA_COLOR = 0xFF00FF
 
 # What color should the busy LED be when refreshing the display?
-DISPLAY_REFRESH_COLOR = 0x003000
+DISPLAY_REFRESH_COLOR = 0x00FF00
 
 # What color should the nightlight be?
 NIGHTLIGHT_COLOR = 0xFFFF30
@@ -36,5 +36,5 @@ NIGHTLIGHT_COLOR = 0xFFFF30
 # What color should the NeoPixels be when the ISS is close to home?
 CLOSE_BY_COLOR = 0xFF0000
 
-# Overall LED brightness (0.0 to 1.0)
-LED_BRIGHTNESS = 0.05
+# Brightness levels.
+LED_BRIGHTNESS_LEVELS = (0.05, 0.2, 0.4, 0.6, 0.8, 1.0)
