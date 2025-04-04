@@ -346,8 +346,12 @@ def set_location_text(text):
         # Should probably throw but oh well
         return
 
+    print("rendered text:")
+
     y = 0
     for line in layout_result.lines:
+        print(f"    {line}")
+
         label = Label(
             font=layout_result.font,
             text=line,
@@ -539,7 +543,7 @@ while True:
             set_busy_led_color(config.FETCH_GEODATA_COLOR)
 
             # Fetch geodata and get location name
-            geodata = network.fetch_geodata(lat, lon)            
+            geodata = network.fetch_geodata(lat, lon)
             location_name = layout.location_name_from_geodata(geodata)
             set_location_text(location_name)
 
