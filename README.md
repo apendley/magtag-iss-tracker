@@ -5,6 +5,8 @@ An International Space Station tracker for the [Adafruit MagTag](https://www.ada
 
 Inspired by and based on [Simon Prickett's Badger ISS Tracker](https://github.com/simonprickett/iss-tracker) project, including use of ideas, code, and assets.
 
+The 3D printed case I used can be found on [my Printables page](https://www.printables.com/model/1255479-magtag-case).
+
 ## Features
 * Uses free APIs provided by OpenNotify and Geoapify to provide location data (API key required for Geoapify data)
   * When possible, displays city/count/district, state/region, and country information for current location.
