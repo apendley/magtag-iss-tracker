@@ -459,8 +459,29 @@ def update_leds():
 #############################
 # State tracking
 #############################
+import supervisor
+
 # Update interval tracking
 last_refresh_time = 0
+
+# Occasionally, it seems like requests start to fail after the device has been running for awhile,
+# and they never succeed again after that. Everything works again after a reboot and re-connection.
+# Thus, as a workaround, if we notice too many failures in a row, soft reboot the device.
+# Not ideal, but unless/until I find a proper fix, it's better than just sitting there
+# for hours failing and waiting for a manual reboot.
+consecutive_refresh_failures = 0
+
+def on_refresh_coordinate(succeeded):
+    global consecutive_refresh_failures    
+
+    if succeeded:
+        consecutive_refresh_failures = 0
+    else:
+        consecutive_refresh_failures += 1
+
+        if consecutive_refresh_failures >= 5:
+            print("Too many consecutive coordinate refresh failures, reloading...")
+            supervisor.reload()
 
 # Track whether currently displaying miles or km.
 # Initialize to whatever the user has decided for the default.
@@ -515,15 +536,19 @@ while True:
         set_busy_led_color(config.FETCH_LOCATION_COLOR)
         coordinate = network.fetch_iss_coordinate()
 
+        # Track if we succeeded fetching the coordinate or not.
+        on_refresh_coordinate(succeeded=(coordinate is not None))
+
         if coordinate is None:
             print("Failed to fetch latest ISS coordinate")
         else:
-            lat, lon = coordinate[0], coordinate[1]
-            print(f"    ISS coordinate: {lat}, {lon}")
-
             # Since the network requests are blocking, track the time it takes for them to complete,
             # so we can apply that time to our history markers decay rate; otherwise, it won't be accounted for.
             requests_start_time = ticks_ms()
+
+            # unpack coordinate
+            lat, lon = coordinate[0], coordinate[1]
+            print(f"    ISS coordinate: {lat}, {lon}")
 
             # Get distance to home using the Haversine formula.
             distance_in_miles = haversine(lat, lon, config.HOME_LATITUDE, config.HOME_LONGITUDE, use_miles=True)
