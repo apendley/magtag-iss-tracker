@@ -28,7 +28,7 @@ The 3D printed case I used can be found on [my Printables page](https://www.prin
 ### Notes
 * An API key is required from Geoapify in order to download location metadata. Accounts are free, and the API is free to use up to 3k requests a day, and 90k requests a month, which is more than plenty if with the default refresh duration.
 * CircuitPython's network requests are blocking. Most of the time this won't matter, but it does mean that button presses will be ignored while fetching data from the internet. The left-most LED behaves as a status indicator; when it's not blue, purple, or green (configurable), button presses will be accepted.
-* CircuitPython's text wrapping functions don't seem to count dashes as natural breaking points. Some mitigations are taken, such as trying to prevent line breaks on long words, but short of fixing this at the source I'm not sure how to eliminate the problem entirely.
+* Sometimes the connection manager seems to die silently, causing subsequent network requests to fail. After 5 unsuccessful consecutive attempts to refresh the ISS coordinate, the MagTag will soft-reboot to work around this issue.
 
 # Installation
 Before we begin installation, you'll need a Geoapify API key. If you don't have one, you can sign up for an account and get one for free at [https://myprojects.geoapify.com/register]. Then, follow the steps below to generate an API key:
