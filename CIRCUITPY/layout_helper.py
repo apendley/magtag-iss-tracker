@@ -101,6 +101,9 @@ class LayoutHelper:
         return "miles away" if use_miles else "km away"
 
     def location_name_from_geodata(self, geodata):
+        if geodata is None:
+            return None
+
         # Get locality component, if possible
         locality = None
         

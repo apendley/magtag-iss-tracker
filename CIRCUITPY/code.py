@@ -539,9 +539,7 @@ while True:
         # Track if we succeeded fetching the coordinate or not.
         on_refresh_coordinate(succeeded=(coordinate is not None))
 
-        if coordinate is None:
-            print("Failed to fetch latest ISS coordinate")
-        else:
+        if coordinate is not None:
             # Since the network requests are blocking, track the time it takes for them to complete,
             # so we can apply that time to our history markers decay rate; otherwise, it won't be accounted for.
             requests_start_time = ticks_ms()
