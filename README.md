@@ -1,7 +1,7 @@
 # magtag-iss-tracker
-An International Space Station tracker for the [Adafruit MagTag](https://www.adafruit.com/product/4800) written in CircuitPython 9. Tracks the location of the ISS in relation to the Earth, and provides information about each location.
+An International Space Station tracker for the [Adafruit MagTag](https://www.adafruit.com/product/4800) written in CircuitPython 10. Tracks the location of the ISS in relation to the Earth, and provides information about each location.
 
-NOTE: The current code will not work on the new 2025 Magtag. It needs to be updated to use CircuitPython 10, as well as the new display driver. I hope to get around to it soon, but if you beat me to it, feel free to open a pull request!
+NOTE: In theory, this code should work on both the older Magtags as well as the newer 2025 version with updated e-ink display. I have no way of testing this myself though, so if you are using a 2025 Magtag, please let me know if this works, and if not, please file an issue! Thank you!
 
 ![MagTag running ISS Tracker firmware](https://github.com/apendley/magtag-iss-tracker/blob/main/hero.jpeg)
 
@@ -40,10 +40,10 @@ Before we begin installation, you'll need a Geoapify API key. If you don't have 
 4. Your API key can be found here. You'll need this later after installing the firmware onto your MagTag.
 
 Now what we have our API key, let's install CircuitPython and the firmware:
-1. Install CircuitPython 9 on your MagTag. As of this writing, the current version is 9.2.6. You can find [CircuitPython installation instruction for the MagTag here](https://learn.adafruit.com/adafruit-magtag/circuitpython).
+1. Install CircuitPython 10 on your MagTag. As of this writing, the current version is 10.0.0-beta.2. You can find [CircuitPython installation instruction for the MagTag here](https://learn.adafruit.com/adafruit-magtag/circuitpython).
 2. Delete all files from your MagTag's CIRCUITPY drive.
 3. Download or clone this repo.
-4. Copy the contents of the CIRCUITPY from the downloaded/cloned repo to your MagTag's CIRCUITPY drive.
+4. Copy the contents of the CIRCUITPY from the downloaded/cloned repo to your MagTag's CIRCUITPY drive. You may want to do just a few files at a time, I had some trouble copying them all over at once.
 5. Open the **settings.toml** file on your MagTag's CIRCUITPY drive in your favorite text editor.
 6. Replace SSID with your WiFi network's SSID
 7. Replace PASSWORD with your WiFi network's password
