@@ -1,7 +1,7 @@
 # magtag-iss-tracker
-An International Space Station tracker for the [Adafruit MagTag](https://www.adafruit.com/product/4800) written in CircuitPython 9. Tracks the location of the ISS in relation to the Earth, and provides information about each location.
+An International Space Station tracker for the [Adafruit MagTag](https://www.adafruit.com/product/4800) written in CircuitPython 10. Tracks the location of the ISS in relation to the Earth, and provides information about each location.
 
-NOTE: The current code will not work on the new 2025 Magtag. It needs to be updated to use CircuitPython 10, as well as the new display driver. I hope to get around to it soon, but if you beat me to it, feel free to open a pull request!
+NOTE: In theory, this code should work on both the older Magtags as well as the newer 2025 version with updated e-ink display. I have no way of testing this myself though, so if you are using a 2025 Magtag, please let me know if this works, and if not, please file an issue! Thank you!
 
 ![MagTag running ISS Tracker firmware](https://github.com/apendley/magtag-iss-tracker/blob/main/hero.jpeg)
 
