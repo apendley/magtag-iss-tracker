@@ -237,7 +237,7 @@ def update_history_markers(dt):
         # print(f"history marker {marker_index} time to live: {marker.time_to_live}")
 
         if marker.time_to_live <= 0:
-            # print(f"history marker is dead, removing")
+            # print(f"history marker {marker_index} is dead, removing")
             # history_markers_group.remove(marker.sprite)
             removed_markers.append(marker)
         else:
@@ -575,11 +575,12 @@ while True:
             update_map(lat, lon)
 
             # Make history markers size decay with time
+            requests_dt = ticks_diff(ticks_ms(), requests_start_time)
+            
             if last_refresh_time == 0:
-                total_dt=0
+                total_dt=requests_dt
                 # print(f"Updating history marker list for the first time")
             else:
-                requests_dt = ticks_diff(ticks_ms(), requests_start_time)
                 total_dt = ticks_add(last_refreshed_dt, requests_dt)
                 # print(f"Updating history markers, last_refresh_time: {last_refresh_time}, requests_start_time: {requests_start_time}, last_refreshed_dt: {last_refreshed_dt}, requests_dt: {requests_dt}, total_dt: {total_dt}")
 
