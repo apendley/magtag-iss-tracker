@@ -6,7 +6,7 @@ import random
 from math import ceil
 
 import rtc
-from adafruit_ticks import ticks_ms, ticks_diff
+from adafruit_ticks import ticks_ms, ticks_diff, ticks_add
 
 import displayio
 
@@ -234,6 +234,7 @@ def update_history_markers(dt):
         marker = history_markers[marker_index]
 
         marker.time_to_live -= dt
+        # print(f"history marker {marker_index} time to live: {marker.time_to_live}")
 
         if marker.time_to_live <= 0:
             # print(f"history marker is dead, removing")
@@ -574,8 +575,16 @@ while True:
             update_map(lat, lon)
 
             # Make history markers size decay with time
-            decay_dt = last_refreshed_dt + ticks_diff(ticks_ms(), requests_start_time)
-            update_history_markers(last_refreshed_dt)
+            if last_refresh_time == 0:
+                total_dt=0
+                # print(f"Updating history marker list for the first time")
+            else:
+                requests_dt = ticks_diff(ticks_ms(), requests_start_time)
+                total_dt = ticks_add(last_refreshed_dt, requests_dt)
+                # print(f"Updating history markers, last_refresh_time: {last_refresh_time}, requests_start_time: {requests_start_time}, last_refreshed_dt: {last_refreshed_dt}, requests_dt: {requests_dt}, total_dt: {total_dt}")
+
+            # Update all history markers with the passage of time
+            update_history_markers(total_dt)
 
             # Need to refresh the display
             display_needs_refresh = True
